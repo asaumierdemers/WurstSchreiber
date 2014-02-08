@@ -33,5 +33,9 @@
 	<real>1391695608.2098999</real>
 	<key>version</key>
 	<string>1.0</string>
+	<key>repository</key>
+	<string>asaumierdemers/WurstSchreiber</string>
+	<key>extensionPath</key>
+	<string>WurstSchreiber.roboFontExt</string>
 </dict>
 </plist>

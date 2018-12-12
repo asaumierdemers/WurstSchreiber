@@ -66,10 +66,14 @@ def calcAngle(a, b, c):
     else:
         return angle
 
-def distance((ax, ay), (bx, by)):
+def distance(pt_a, pt_b):
+    ax, ay = pt_a
+    bx, by = pt_b
     return math.sqrt((bx-ax)**2 + (by-ay)**2)
 
-def slope((ax, ay), (bx, by)):
+def slope(pt_a, pt_b):
+    ax, ay = pt_a
+    bx, by = pt_b
     return (bx-ax), (by-ay)
 
 def normalise(a, b):
@@ -79,17 +83,23 @@ def normalise(a, b):
     else:
         return (0, 0)
 
-def interpolate((ax, ay), (bx, by), f):
+def interpolate(pt_a, pt_b, f):
+    ax, ay = pt_a
+    bx, by = pt_b
     cx = ax + f * (bx - ax)
     cy = ay + f * (by - ay)
     return (cx, cy)
 
-def offsetPoint((ax, ay), (nx, ny), radius):
+def offsetPoint(pt_a, pt_n, radius):
+    ax, ay = pt_a
+    nx, ny = pt_n
     px = ax+nx*radius
     py = ay+ny*radius
     return (px, py)
 
-def arcControlPoint((ax, ay), (nx, ny), radius):
+def arcControlPoint(pt_a, pt_n, radius):
+    ax, ay = pt_a
+    nx, ny = pt_n
     px = ax+nx*radius*kappa
     py = ay+ny*radius*kappa
     return (px, py)
@@ -141,7 +151,7 @@ class PreviewPen(BasePen):
     def _curveToOne(self, p1, p2, p3):
         curveTo(p1, p2, p3)
     def _closePath(self):
-        closepath()
+        closePath()
 
 class WurstPen(BasePen):
 
@@ -292,14 +302,14 @@ class WurstPen(BasePen):
         newPath()
 
         start = offsetPoint(p0, m1, -radius)
-            path.moveTo(start)
-            self.drawWurstCap(path, p0, n1, m1, radius)
-            self.drawWurstCurveSide(path, p0, p1, p2, p3, m1, m2, cdistance, radius)
-            self.drawWurstCap(path, p3, n2, m2, radius)
-            self.drawWurstCurveSide(path, p3, p2, p1, p0, m2, m1, cdistance, radius)
-            path.closePath()
+        path.moveTo(start)
+        self.drawWurstCap(path, p0, n1, m1, radius)
+        self.drawWurstCurveSide(path, p0, p1, p2, p3, m1, m2, cdistance, radius)
+        self.drawWurstCap(path, p3, n2, m2, radius)
+        self.drawWurstCurveSide(path, p3, p2, p1, p0, m2, m1, cdistance, radius)
+        path.closePath()
 
-            drawPath()
+        drawPath()
 
     def drawLineWurst(self, p0, p1, radius, margin):
         if distance(p0, p1) < radius:
@@ -314,16 +324,16 @@ class WurstPen(BasePen):
 
         path = self.getPath()
 
-            newPath()
+        newPath()
 
-            start = offsetPoint(p0, m, -radius)
-            path.moveTo(start)
-            self.drawWurstCap(path, p0, n, m, radius)
-            self.drawWurstLineSide(path, p1, m, radius)
-            self.drawWurstCap(path, p1, n, m, -radius)
-            path.closePath()
+        start = offsetPoint(p0, m, -radius)
+        path.moveTo(start)
+        self.drawWurstCap(path, p0, n, m, radius)
+        self.drawWurstLineSide(path, p1, m, radius)
+        self.drawWurstCap(path, p1, n, m, -radius)
+        path.closePath()
 
-            drawPath()
+        drawPath()
 
 
 class SliderGroup(Group):

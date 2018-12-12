@@ -10,11 +10,12 @@ from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensi
 from mojo.events import addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
 from mojo.drawingTools import *
-from vanilla import *
+from vanilla import Button, CheckBox, ColorWell, EditText, FloatingWindow, Group, Slider
 
 # constants
-kappa = 4*(math.sqrt(2)-1)/3
-curvecorrection = 1.25
+KAPPA = 4*(math.sqrt(2)-1)/3
+CURVE_CORRECTION = 1.25
+
 
 class Vector(object):
 
@@ -42,6 +43,7 @@ class Vector(object):
     def __iter__(self):
         return iter(self.v)
 
+
 def calcCubicParameters(pt1, pt2, pt3, pt4):
     pt1 = Vector(pt1)
     pt2 = Vector(pt2)
@@ -53,28 +55,32 @@ def calcCubicParameters(pt1, pt2, pt3, pt4):
     a = pt4 - d - c - b
     return a, b, c, d
 
+
 def calcAngle(a, b, c):
     ab = distance(a, b)
     bc = distance(b, c)
     ac = distance(a, c)
     try:
-        angle = math.acos((bc*bc+ab*ab-ac*ac)/(2*bc*ab)) # Law of cosines
-    except ValueError: # math domain error
+        angle = math.acos((bc*bc+ab*ab-ac*ac)/(2*bc*ab))  # Law of cosines
+    except ValueError:  # math domain error
         return None
-    except ZeroDivisionError: # prev point has same position as point
+    except ZeroDivisionError:  # prev point has same position as point
         return None
     else:
         return angle
+
 
 def distance(pt_a, pt_b):
     ax, ay = pt_a
     bx, by = pt_b
     return math.sqrt((bx-ax)**2 + (by-ay)**2)
 
+
 def slope(pt_a, pt_b):
     ax, ay = pt_a
     bx, by = pt_b
     return (bx-ax), (by-ay)
+
 
 def normalise(a, b):
     n = math.sqrt((a*a)+(b*b))
@@ -83,12 +89,14 @@ def normalise(a, b):
     else:
         return (0, 0)
 
+
 def interpolate(pt_a, pt_b, f):
     ax, ay = pt_a
     bx, by = pt_b
     cx = ax + f * (bx - ax)
     cy = ay + f * (by - ay)
     return (cx, cy)
+
 
 def offsetPoint(pt_a, pt_n, radius):
     ax, ay = pt_a
@@ -97,17 +105,20 @@ def offsetPoint(pt_a, pt_n, radius):
     py = ay+ny*radius
     return (px, py)
 
+
 def arcControlPoint(pt_a, pt_n, radius):
     ax, ay = pt_a
     nx, ny = pt_n
-    px = ax+nx*radius*kappa
-    py = ay+ny*radius*kappa
+    px = ax+nx*radius*KAPPA
+    py = ay+ny*radius*KAPPA
     return (px, py)
+
 
 def arcControlPoints(a, an, b, bn, radius):
     p1 = arcControlPoint(a, an, radius)
     p2 = arcControlPoint(b, bn, radius)
     return p1, p2
+
 
 def splitCubicAtLength(p0, p1, p2, p3, length):
     a, b, c, d = calcCubicParameters(p0, p1, p2, p3)
@@ -120,6 +131,7 @@ def splitCubicAtLength(p0, p1, p2, p3, length):
     s = length / velocity
     return s
 
+
 def splitLineAt(p0, p1, length):
     ldistance = distance(p0, p1)
     x1, y1 = p0
@@ -127,6 +139,7 @@ def splitLineAt(p0, p1, length):
     x = x1+(length/ldistance)*(x2-x1)
     y = y1+(length/ldistance)*(y2-y1)
     return x, y
+
 
 def calcTriangleSSA(angle, side1, side2):
     knownAngle = math.degrees(angle)
@@ -146,12 +159,16 @@ class PreviewPen(BasePen):
 
     def _moveTo(self, p1):
         moveTo(p1)
+
     def _lineTo(self, p1):
         lineTo(p1)
+
     def _curveToOne(self, p1, p2, p3):
         curveTo(p1, p2, p3)
+
     def _closePath(self):
         closePath()
+
 
 class WurstPen(BasePen):
 
@@ -231,10 +248,10 @@ class WurstPen(BasePen):
         o3 = n[0]*.5+m[0]*.25, n[1]*.5+m[1]*.25
         o4 = m[0]*.1, m[1]*.1
 
-        a = offsetPoint(p0, o1, -radius*curvecorrection)
-        b = offsetPoint(p0, o2, -radius*curvecorrection)
-        c = offsetPoint(p0, o3, -radius*curvecorrection)
-        d = offsetPoint(p0, o4, -radius*curvecorrection)
+        a = offsetPoint(p0, o1, -radius*CURVE_CORRECTION)
+        b = offsetPoint(p0, o2, -radius*CURVE_CORRECTION)
+        c = offsetPoint(p0, o3, -radius*CURVE_CORRECTION)
+        d = offsetPoint(p0, o4, -radius*CURVE_CORRECTION)
 
         path = self.getPath()
 
@@ -250,10 +267,10 @@ class WurstPen(BasePen):
 
     def drawWurstCap(self, path, p, n, m, radius):
         a = offsetPoint(p, m, -radius)
-        d = offsetPoint(p, n, radius*curvecorrection)
-        b, c = arcControlPoints(a, (-n[0], -n[1]), d, m, -radius*curvecorrection)
+        d = offsetPoint(p, n, radius*CURVE_CORRECTION)
+        b, c = arcControlPoints(a, (-n[0], -n[1]), d, m, -radius*CURVE_CORRECTION)
         g = offsetPoint(p, m, radius)
-        e, f = arcControlPoints(d, m, g, n, radius*curvecorrection)
+        e, f = arcControlPoints(d, m, g, n, radius*CURVE_CORRECTION)
 
         path.curveTo(b, c, d)
         path.curveTo(e, f, g)
@@ -339,8 +356,18 @@ class WurstPen(BasePen):
 class SliderGroup(Group):
     def __init__(self, posSize, minValue, maxValue, value, callback):
         Group.__init__(self, posSize)
-        self.slider = Slider((2, 3, -55, 17), minValue=minValue, maxValue=maxValue, value=value, sizeStyle="regular", callback=self.sliderChanged)
-        self.edit = EditText((-40, 0, -0, 22), text=str(value), placeholder=str(value), callback=self.editChanged)
+        self.slider = Slider(
+            (2, 3, -55, 17),
+            minValue=minValue,
+            maxValue=maxValue,
+            value=value,
+            sizeStyle="regular",
+            callback=self.sliderChanged)
+        self.edit = EditText(
+            (-40, 0, -0, 22),
+            text=str(value),
+            placeholder=str(value),
+            callback=self.editChanged)
         self.callback = callback
 
     def sliderChanged(self, sender):
@@ -359,6 +386,7 @@ class SliderGroup(Group):
 
 WurstSchreiberDefaultKey = "com.asaumierdemers.WurstSchreiber"
 
+
 class WurstSchreiber(object):
 
     def __init__(self):
@@ -366,21 +394,30 @@ class WurstSchreiber(object):
         self.draw = False
         self.swap = True
 
-        self.radius = getExtensionDefault("%s.%s" %(WurstSchreiberDefaultKey, "radius"), 60)
+        self.radius = getExtensionDefault(
+            "%s.%s" % (WurstSchreiberDefaultKey, "radius"), 60)
 
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(1, 0, 0, .5)
-        colorValue = getExtensionDefaultColor("%s.%s" %(WurstSchreiberDefaultKey, "color"), color)
+        colorValue = getExtensionDefaultColor(
+            "%s.%s" % (WurstSchreiberDefaultKey, "color"), color)
 
         self.w = FloatingWindow((150, 170), "WurstSchreiber")
         x = 15
         y = 15
-        self.w.preview = CheckBox((x, y, -x, 20), "Preview", callback=self.previewChanged, value=True)
+        self.w.preview = CheckBox(
+            (x, y, -x, 20),
+            "Preview",
+            callback=self.previewChanged,
+            value=True)
         y+=30
-        self.w.slider = SliderGroup((x, y, -x, 22), 0, 100, self.radius, callback=self.sliderChanged)
+        self.w.slider = SliderGroup(
+            (x, y, -x, 22), 0, 100, self.radius, callback=self.sliderChanged)
         y+=35
-        self.w.color = ColorWell((x, y, -x, 40), callback=self.colorChanged, color=colorValue)
+        self.w.color = ColorWell(
+            (x, y, -x, 40), callback=self.colorChanged, color=colorValue)
         y+=55
-        self.w.button = Button((x, y, -x, 20), "Trace!", callback=self.traceButton)
+        self.w.button = Button(
+            (x, y, -x, 20), "Trace!", callback=self.traceButton)
         addObserver(self, "drawWurst", "drawBackground")
         self.w.bind("close", self.closing)
         self.w.open()
@@ -393,11 +430,13 @@ class WurstSchreiber(object):
 
     def sliderChanged(self, sender):
         self.radius = int(sender.get())
-        setExtensionDefault("%s.%s" %(WurstSchreiberDefaultKey, "radius"), self.radius)
+        setExtensionDefault(
+            "%s.%s" % (WurstSchreiberDefaultKey, "radius"), self.radius)
         UpdateCurrentGlyphView()
 
     def colorChanged(self, sender):
-        setExtensionDefaultColor("%s.%s" %(WurstSchreiberDefaultKey, "color"), sender.get())
+        setExtensionDefaultColor(
+            "%s.%s" % (WurstSchreiberDefaultKey, "color"), sender.get())
         UpdateCurrentGlyphView()
 
     def getColor(self):
@@ -428,5 +467,6 @@ class WurstSchreiber(object):
                 self.w.preview.set(False)
                 glyph.performUndo()
             glyph.update()
+
 
 WurstSchreiber()

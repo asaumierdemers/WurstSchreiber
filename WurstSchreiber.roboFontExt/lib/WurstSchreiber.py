@@ -463,7 +463,7 @@ class WurstSchreiber(object):
                 self.draw = False
                 self.w.preview.set(False)
                 glyph.performUndo()
-            glyph.update()
+            glyph.changed()
 
 
 WurstSchreiber()

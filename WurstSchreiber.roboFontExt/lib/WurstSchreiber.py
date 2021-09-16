@@ -13,6 +13,8 @@ from mojo.UI import UpdateCurrentGlyphView
 import mojo.drawingTools as dT
 from vanilla import Button, CheckBox, ColorWell, EditText, FloatingWindow, Group, Slider
 
+from mojo.subscriber import WindowController
+
 # constants
 KAPPA = 4*(math.sqrt(2)-1)/3
 CURVE_CORRECTION = 1.25
@@ -355,6 +357,7 @@ class WurstPen(BasePen):
 
 
 class SliderGroup(Group):
+
     def __init__(self, posSize, minValue, maxValue, value, callback):
         Group.__init__(self, posSize)
         self.slider = Slider(
@@ -388,9 +391,9 @@ class SliderGroup(Group):
 WurstSchreiberDefaultKey = "com.asaumierdemers.WurstSchreiber"
 
 
-class WurstSchreiber(object):
+class WurstSchreiber(WindowController):
 
-    def __init__(self):
+    def build(self):
 
         self.draw = False
         self.swap = True
@@ -418,10 +421,9 @@ class WurstSchreiber(object):
         self.w.button = Button(
             (x, y, -x, 20), "Trace!", callback=self.traceButton)
         addObserver(self, "drawWurst", "drawBackground")
-        self.w.bind("close", self.closing)
         self.w.open()
 
-    def closing(self, sender):
+    def windowWillClose(self, sender):
         removeObserver(self, "drawBackground")
 
     def previewChanged(self, sender):
@@ -466,4 +468,5 @@ class WurstSchreiber(object):
             glyph.changed()
 
 
-WurstSchreiber()
+if __name__ == '__main__':
+    WurstSchreiber()

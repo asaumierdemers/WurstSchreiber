@@ -395,12 +395,10 @@ class WurstSchreiber(object):
         self.draw = False
         self.swap = True
 
-        self.radius = getExtensionDefault(
-            "%s.%s" % (WurstSchreiberDefaultKey, "radius"), 60)
+        self.radius = getExtensionDefault(f"{WurstSchreiberDefaultKey}.radius", 60)
 
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(1, 0, 0, .5)
-        colorValue = getExtensionDefaultColor(
-            "%s.%s" % (WurstSchreiberDefaultKey, "color"), color)
+        colorValue = getExtensionDefaultColor(f"{WurstSchreiberDefaultKey}.color", color)
 
         self.w = FloatingWindow((150, 170), "WurstSchreiber")
         x = 15
@@ -431,13 +429,11 @@ class WurstSchreiber(object):
 
     def sliderChanged(self, sender):
         self.radius = int(sender.get())
-        setExtensionDefault(
-            "%s.%s" % (WurstSchreiberDefaultKey, "radius"), self.radius)
+        setExtensionDefault(f"{WurstSchreiberDefaultKey}.radius", self.radius)
         UpdateCurrentGlyphView()
 
     def colorChanged(self, sender):
-        setExtensionDefaultColor(
-            "%s.%s" % (WurstSchreiberDefaultKey, "color"), sender.get())
+        setExtensionDefaultColor(f"{WurstSchreiberDefaultKey}.color", sender.get())
         UpdateCurrentGlyphView()
 
     def getColor(self):

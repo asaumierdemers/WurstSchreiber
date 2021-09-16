@@ -6,10 +6,11 @@ from fontTools.pens.basePen import BasePen
 import math
 
 from AppKit import NSColor
+from mojo.roboFont import CurrentGlyph
 from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensionDefaultColor, setExtensionDefaultColor
 from mojo.events import addObserver, removeObserver
 from mojo.UI import UpdateCurrentGlyphView
-from mojo.drawingTools import *
+import mojo.drawingTools as dT
 from vanilla import Button, CheckBox, ColorWell, EditText, FloatingWindow, Group, Slider
 
 # constants
@@ -150,24 +151,24 @@ def calcTriangleSSA(angle, side1, side2):
         return 0
     temp = partialSide / ratio
     partialAngle = math.degrees(math.asin(temp))
-    unknownAngle = 180 - knownAngle - partialAngle;
-    unknownSide = ratio * math.sin(math.radians(unknownAngle)) # Law of sines
+    unknownAngle = 180 - knownAngle - partialAngle
+    unknownSide = ratio * math.sin(math.radians(unknownAngle))   # Law of sines
     return unknownSide
 
 
 class PreviewPen(BasePen):
 
     def _moveTo(self, p1):
-        moveTo(p1)
+        dT.moveTo(p1)
 
     def _lineTo(self, p1):
-        lineTo(p1)
+        dT.lineTo(p1)
 
     def _curveToOne(self, p1, p2, p3):
-        curveTo(p1, p2, p3)
+        dT.curveTo(p1, p2, p3)
 
     def _closePath(self):
-        closePath()
+        dT.closePath()
 
 
 class WurstPen(BasePen):
@@ -255,7 +256,7 @@ class WurstPen(BasePen):
 
         path = self.getPath()
 
-        newPath()
+        dT.newPath()
 
         path.moveTo(a)
         path.lineTo(b)
@@ -263,7 +264,7 @@ class WurstPen(BasePen):
         path.lineTo(d)
         path.closePath()
 
-        drawPath()
+        dT.drawPath()
 
     def drawWurstCap(self, path, p, n, m, radius):
         a = offsetPoint(p, m, -radius)
@@ -316,7 +317,7 @@ class WurstPen(BasePen):
 
         path = self.getPath()
 
-        newPath()
+        dT.newPath()
 
         start = offsetPoint(p0, m1, -radius)
         path.moveTo(start)
@@ -326,7 +327,7 @@ class WurstPen(BasePen):
         self.drawWurstCurveSide(path, p3, p2, p1, p0, m2, m1, cdistance, radius)
         path.closePath()
 
-        drawPath()
+        dT.drawPath()
 
     def drawLineWurst(self, p0, p1, radius, margin):
         if distance(p0, p1) < radius:
@@ -341,7 +342,7 @@ class WurstPen(BasePen):
 
         path = self.getPath()
 
-        newPath()
+        dT.newPath()
 
         start = offsetPoint(p0, m, -radius)
         path.moveTo(start)
@@ -350,7 +351,7 @@ class WurstPen(BasePen):
         self.drawWurstCap(path, p1, n, m, -radius)
         path.closePath()
 
-        drawPath()
+        dT.drawPath()
 
 
 class SliderGroup(Group):
@@ -409,13 +410,13 @@ class WurstSchreiber(object):
             "Preview",
             callback=self.previewChanged,
             value=True)
-        y+=30
+        y += 30
         self.w.slider = SliderGroup(
             (x, y, -x, 22), 0, 100, self.radius, callback=self.sliderChanged)
-        y+=35
+        y += 35
         self.w.color = ColorWell(
             (x, y, -x, 40), callback=self.colorChanged, color=colorValue)
-        y+=55
+        y += 55
         self.w.button = Button(
             (x, y, -x, 20), "Trace!", callback=self.traceButton)
         addObserver(self, "drawWurst", "drawBackground")
@@ -452,8 +453,8 @@ class WurstSchreiber(object):
         if self.w.preview.get():
             radius = self.radius
             draw = self.draw
-            r,g,b,a = self.getColor()
-            fill(r,g,b,a)
+            r, g, b, a = self.getColor()
+            dT.fill(r, g, b, a)
             glyph = CurrentGlyph()
             pen = WurstPen(None, radius, draw)
             glyph.draw(pen)

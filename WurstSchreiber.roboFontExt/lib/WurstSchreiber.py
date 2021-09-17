@@ -3,17 +3,15 @@
 
 from fontTools.misc.bezierTools import splitCubicAtT
 from fontTools.pens.basePen import BasePen
+from fontTools.pens.recordingPen import RecordingPen
 import math
 
 from AppKit import NSColor
 from mojo.roboFont import CurrentGlyph
 from mojo.extensions import getExtensionDefault, setExtensionDefault, getExtensionDefaultColor, setExtensionDefaultColor
-from mojo.events import addObserver, removeObserver
-from mojo.UI import UpdateCurrentGlyphView
-import mojo.drawingTools as dT
 from vanilla import Button, CheckBox, ColorWell, EditText, FloatingWindow, Group, Slider
+from mojo.subscriber import WindowController, Subscriber, registerGlyphEditorSubscriber
 
-from mojo.subscriber import WindowController
 
 # constants
 KAPPA = 4*(math.sqrt(2)-1)/3
@@ -158,33 +156,16 @@ def calcTriangleSSA(angle, side1, side2):
     return unknownSide
 
 
-class PreviewPen(BasePen):
-
-    def _moveTo(self, p1):
-        dT.moveTo(p1)
-
-    def _lineTo(self, p1):
-        dT.lineTo(p1)
-
-    def _curveToOne(self, p1, p2, p3):
-        dT.curveTo(p1, p2, p3)
-
-    def _closePath(self):
-        dT.closePath()
-
-
 class WurstPen(BasePen):
 
-    def __init__(self, glyphSet, radius, draw):
+    def __init__(self, glyphSet, merzLayer, recPen, color, radius, draw):
         BasePen.__init__(self, glyphSet)
 
         self.radius = radius
         self.draw = draw
-        self.glyph = CurrentGlyph()
-        self.glyphcopy = self.glyph.copy()
-
-        if self.draw:
-            self.glyphcopy.clear()
+        self.merzLayer = merzLayer
+        self.recPen = recPen
+        self.color = color
 
     def _moveTo(self, pt1):
         self._prevPoint = None
@@ -224,9 +205,11 @@ class WurstPen(BasePen):
 
     def getPath(self):
         if self.draw:
-            path = self.glyphcopy.getPen()
+            path = self.recPen
         else:
-            path = PreviewPen(None)
+            pathLayer = self.merzLayer.appendPathSublayer()
+            pathLayer.setFillColor(self.color)
+            path = pathLayer.getPen()
         return path
 
     def calcWurstMargin(self, pt0, pt1):
@@ -257,16 +240,11 @@ class WurstPen(BasePen):
         d = offsetPoint(p0, o4, -radius*CURVE_CORRECTION)
 
         path = self.getPath()
-
-        dT.newPath()
-
         path.moveTo(a)
         path.lineTo(b)
         path.lineTo(c)
         path.lineTo(d)
         path.closePath()
-
-        dT.drawPath()
 
     def drawWurstCap(self, path, p, n, m, radius):
         a = offsetPoint(p, m, -radius)
@@ -318,9 +296,6 @@ class WurstPen(BasePen):
         cdistance = distance(p0, p3)
 
         path = self.getPath()
-
-        dT.newPath()
-
         start = offsetPoint(p0, m1, -radius)
         path.moveTo(start)
         self.drawWurstCap(path, p0, n1, m1, radius)
@@ -328,8 +303,6 @@ class WurstPen(BasePen):
         self.drawWurstCap(path, p3, n2, m2, radius)
         self.drawWurstCurveSide(path, p3, p2, p1, p0, m2, m1, cdistance, radius)
         path.closePath()
-
-        dT.drawPath()
 
     def drawLineWurst(self, p0, p1, radius, margin):
         if distance(p0, p1) < radius:
@@ -343,17 +316,12 @@ class WurstPen(BasePen):
         m = n[1], -n[0]
 
         path = self.getPath()
-
-        dT.newPath()
-
         start = offsetPoint(p0, m, -radius)
         path.moveTo(start)
         self.drawWurstCap(path, p0, n, m, radius)
         self.drawWurstLineSide(path, p1, m, radius)
         self.drawWurstCap(path, p1, n, m, -radius)
         path.closePath()
-
-        dT.drawPath()
 
 
 class SliderGroup(Group):
@@ -391,7 +359,9 @@ class SliderGroup(Group):
 WurstSchreiberDefaultKey = "com.asaumierdemers.WurstSchreiber"
 
 
-class WurstSchreiber(WindowController):
+class WurstSchreiber(Subscriber, WindowController):
+
+    debug = True
 
     def build(self):
 
@@ -402,6 +372,14 @@ class WurstSchreiber(WindowController):
 
         color = NSColor.colorWithCalibratedRed_green_blue_alpha_(1, 0, 0, .5)
         colorValue = getExtensionDefaultColor(f"{WurstSchreiberDefaultKey}.color", color)
+
+        glyphEditor = self.getGlyphEditor()
+        self.container = glyphEditor.extensionContainer(
+            identifier=f'{WurstSchreiberDefaultKey}.background',
+            location='background',
+            clear=True
+        )
+        self.wurstLayer = self.container.appendPathSublayer(fillColor=(1, 0, 0, .5))
 
         self.w = FloatingWindow((150, 170), "WurstSchreiber")
         x = 15
@@ -420,23 +398,31 @@ class WurstSchreiber(WindowController):
         y += 55
         self.w.button = Button(
             (x, y, -x, 20), "Trace!", callback=self.traceButton)
-        addObserver(self, "drawWurst", "drawBackground")
+
+    def started(self):
         self.w.open()
 
-    def windowWillClose(self, sender):
-        removeObserver(self, "drawBackground")
+    def destroy(self):
+        self.container.clearSublayers()
 
     def previewChanged(self, sender):
-        UpdateCurrentGlyphView()
+        self.wurstLayer.setVisible(sender.get())
+
+    def glyphEditorDidSetGlyph(self, info):
+        self.drawWurst()
+
+    glyphEditorGlyphDidChangeDelay = 0
+    def glyphEditorGlyphDidChange(self, info):
+        self.drawWurst()
 
     def sliderChanged(self, sender):
         self.radius = int(sender.get())
         setExtensionDefault(f"{WurstSchreiberDefaultKey}.radius", self.radius)
-        UpdateCurrentGlyphView()
+        self.drawWurst()
 
     def colorChanged(self, sender):
         setExtensionDefaultColor(f"{WurstSchreiberDefaultKey}.color", sender.get())
-        UpdateCurrentGlyphView()
+        self.drawWurst()
 
     def getColor(self):
         color = self.w.color.get()
@@ -445,28 +431,37 @@ class WurstSchreiber(WindowController):
     def traceButton(self, sender):
         if self.w.preview.get():
             self.draw = True
-            UpdateCurrentGlyphView()
+            self.drawWurst()
 
-    def drawWurst(self, sender):
+    def drawWurst(self):
         if self.w.preview.get():
             radius = self.radius
             draw = self.draw
-            r, g, b, a = self.getColor()
-            dT.fill(r, g, b, a)
+
+            self.wurstLayer.clearSublayers()
+            wurstPen = WurstPen(glyphSet=None,
+                                merzLayer=self.wurstLayer,
+                                recPen=RecordingPen(),
+                                color=self.getColor(),
+                                radius=radius,
+                                draw=draw)
+
             glyph = CurrentGlyph()
-            pen = WurstPen(None, radius, draw)
-            glyph.draw(pen)
+            glyph.draw(wurstPen)
+
             if self.draw:
                 glyph.prepareUndo("WurstTrace")
-                if self.swap:
-                    glyph.getLayer("background").clear()
-                    glyph.swapToLayer("background")
-                glyph.appendGlyph(pen.glyphcopy)
+                background = glyph.getLayer("background")
+
+                glyphPen = background.getPen()
+                wurstPen.recPen.replay(glyphPen)
+
                 self.draw = False
                 self.w.preview.set(False)
+
                 glyph.performUndo()
-            glyph.changed()
+                glyph.changed()
 
 
 if __name__ == '__main__':
-    WurstSchreiber()
+    registerGlyphEditorSubscriber(WurstSchreiber)

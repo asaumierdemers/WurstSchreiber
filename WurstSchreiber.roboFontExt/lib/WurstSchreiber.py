@@ -1,5 +1,6 @@
 # WurstSchreiber is a tool for drawing segments as sausages.
 # Many thanks to Just van Rossum
+# Update to RF4 by Roberto Arista and Frederik Berlaen
 
 from fontTools.misc.bezierTools import splitCubicAtT
 from fontTools.pens.basePen import BasePen

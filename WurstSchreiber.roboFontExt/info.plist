@@ -26,9 +26,9 @@
 	<key>name</key>
 	<string>WurstSchreiber</string>
 	<key>requiresVersionMajor</key>
-	<string>1</string>
+	<string>4</string>
 	<key>requiresVersionMinor</key>
-	<string>5</string>
+	<string>0</string>
 	<key>timeStamp</key>
 	<real>1391695608.2098999</real>
 	<key>version</key>

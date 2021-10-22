@@ -3,16 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>addToMenu</key>
-	<array>
-		<dict>
-			<key>path</key>
-			<string>wurstschreiber.py</string>
-			<key>preferredName</key>
-			<string>WurstSchreiber</string>
-			<key>shortKey</key>
-			<string></string>
-		</dict>
-	</array>
+	<array/>
 	<key>developer</key>
 	<string>Alexandre Saumier Demers</string>
 	<key>developerURL</key>
@@ -30,12 +21,8 @@
 	<key>requiresVersionMinor</key>
 	<string>0</string>
 	<key>timeStamp</key>
-	<real>1391695608.2098999</real>
+	<real>1634907568.9784031</real>
 	<key>version</key>
-	<string>1.0</string>
-	<key>repository</key>
-	<string>asaumierdemers/WurstSchreiber</string>
-	<key>extensionPath</key>
-	<string>WurstSchreiber.roboFontExt</string>
+	<string>1.1</string>
 </dict>
 </plist>

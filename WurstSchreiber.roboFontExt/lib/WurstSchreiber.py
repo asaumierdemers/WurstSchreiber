@@ -8,7 +8,7 @@ from fontTools.pens.recordingPen import RecordingPen
 import math
 import vanilla
 
-from mojo.roboFont import CurrentGlyph
+from mojo.roboFont import CurrentGlyph, OpenWindow
 from mojo.extensions import getExtensionDefault, setExtensionDefault
 from mojo.extensions import getExtensionDefaultColor, setExtensionDefaultColor
 from mojo.extensions import rgbaToNSColor, NSColorToRgba
@@ -349,8 +349,6 @@ class WurstDefaults:
 
 class WurstSchreiber(Subscriber, WurstDefaults):
 
-    debug = True
-
     def build(self):
         self.wurstFromDefaults()
 
@@ -432,8 +430,6 @@ class SliderGroup(vanilla.Group):
 
 
 class WurstSchreiberController(WindowController, WurstDefaults):
-
-    debug = True
 
     def build(self):
         self.wurstFromDefaults()

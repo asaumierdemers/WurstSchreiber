@@ -13,8 +13,11 @@ from mojo.extensions import getExtensionDefault, setExtensionDefault
 from mojo.extensions import getExtensionDefaultColor, setExtensionDefaultColor
 from mojo.extensions import rgbaToNSColor, NSColorToRgba
 
-from mojo.subscriber import WindowController, Subscriber, registerGlyphEditorSubscriber, registerSubscriberEvent, roboFontSubscriberEventRegistry
+from mojo.subscriber import WindowController, Subscriber
+from mojo.subscriber import unregisterGlyphEditorSubscriber, registerGlyphEditorSubscriber
 from mojo.events import postEvent
+
+from events import WurstSchreiberDefaultKey
 
 # constants
 KAPPA = 4*(math.sqrt(2)-1)/3
@@ -332,8 +335,6 @@ class MerzWurstPen(BasePen):
         self.path.endPath()
 
 
-WurstSchreiberDefaultKey = "com.asaumierdemers.WurstSchreiber"
-
 def drawWurst(glyph, outPen, radius):
     pen = WurstPen(glyph.layer, outPen, radius)
     glyph.draw(pen)
@@ -465,6 +466,12 @@ class WurstSchreiberController(WindowController, WurstDefaults):
         )
         self.w.open()
 
+    def started(self):
+        registerGlyphEditorSubscriber(WurstSchreiber)
+
+    def destroy(self):
+        unregisterGlyphEditorSubscriber(WurstSchreiber)
+
     def getOptions(self):
         return dict(
             visible=self.w.preview.get(),
@@ -497,24 +504,5 @@ class WurstSchreiberController(WindowController, WurstDefaults):
         postEvent(f"{WurstSchreiberDefaultKey}.removeWurst")
 
 
-if f"{WurstSchreiberDefaultKey}.updateGlyphEditor" not in roboFontSubscriberEventRegistry:
-    registerSubscriberEvent(
-        subscriberEventName=f"{WurstSchreiberDefaultKey}.updateGlyphEditor",
-        methodName="wurstSchreiverUpdateGlyphEditor",
-        lowLevelEventNames=[f"{WurstSchreiberDefaultKey}.updateGlyphEditor"],
-        dispatcher="roboFont",
-        delay=0.02,
-    )
-
-    registerSubscriberEvent(
-        subscriberEventName=f"{WurstSchreiberDefaultKey}.removeWurst",
-        methodName="wurstSchreiverRemoveWurst",
-        lowLevelEventNames=[f"{WurstSchreiberDefaultKey}.removeWurst"],
-        dispatcher="roboFont",
-        delay=0,
-    )
-
-
 if __name__ == '__main__':
     OpenWindow(WurstSchreiberController)
-    registerGlyphEditorSubscriber(WurstSchreiber)

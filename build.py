@@ -17,7 +17,7 @@ libPath = basePath / 'source' / 'code'
 extensionFile = 'WurstSchreiber.roboFontExt'
 
 # path of the compiled extension
-extensionPath = basePath / 'build' / extensionFile
+extensionPath = basePath / extensionFile
 
 # initiate the extension builder
 B = ExtensionBundle()
@@ -35,7 +35,7 @@ B.developerURL = 'http://asaumierdemers.com'
 B.version = '1.2'
 
 # should the extension be launched at start-up?
-B.launchAtStartUp = False
+B.launchAtStartUp = True
 
 # script to be executed when RF starts
 B.mainScript = 'events.py'
@@ -50,9 +50,9 @@ B.requiresVersionMinor = '1'
 # scripts which should appear in Extensions menu
 B.addToMenu = [
     {
-        'path':          'wurstSchreiber.py',
+        'path':          'WurstSchreiber.py',
         'preferredName': 'Wurst Schreiber',
-        'shortKey':      None,
+        'shortKey':      '',
     },
 ]
 

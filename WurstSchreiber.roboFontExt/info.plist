@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>addToMenu</key>
+	<array>
+		<dict>
+			<key>path</key>
+			<string>WurstSchreiber.py</string>
+			<key>preferredName</key>
+			<string>Wurst Schreiber</string>
+			<key>shortKey</key>
+			<string></string>
+		</dict>
+	</array>
+	<key>developer</key>
+	<string>Alexandre Saumier Demers</string>
+	<key>developerURL</key>
+	<string>http://asaumierdemers.com</string>
+	<key>html</key>
+	<false/>
+	<key>launchAtStartUp</key>
+	<true/>
+	<key>mainScript</key>
+	<string>events.py</string>
+	<key>name</key>
+	<string>Wurst Schreiber</string>
+	<key>requiresVersionMajor</key>
+	<string>4</string>
+	<key>requiresVersionMinor</key>
+	<string>1</string>
+	<key>timeStamp</key>
+	<real>1639059020.6490629</real>
+	<key>version</key>
+	<string>1.2</string>
+</dict>
+</plist>
